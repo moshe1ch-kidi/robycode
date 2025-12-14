@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RoboCode</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+      body {
+        font-family: 'Rubik', sans-serif;
+      }
+      
+      /* --- TOOLBOX CONTAINER --- */
+      .blocklyToolboxDiv {
+        background-color: #f9f9f9 !important;
+        border-right: 1px solid #e2e8f0;
+        width: 110px !important; /* Increased width */
+        padding-top: 12px !important;
+        overflow-y: auto !important;
+      }
+      
+      .blocklyFlyoutBackground {
+        fill: #f8fafc !important;
+        fill-opacity: 1 !important;
+      }
+
+      /* --- ROW STYLING --- */
+      .blocklyTreeRow {
+        height: auto !important;
+        min-height: 90px !important; /* Increased minimum height */
+        margin-bottom: 12px !important; /* Increased spacing to fit line */
+        border: none !important;
+        padding: 10px 0 !important;
+        
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background-color: transparent; /* Default transparent */
+        margin-left: 6px !important;
+        margin-right: 6px !important;
+        border-radius: 12px !important;
+        
+        position: relative !important; /* Needed for the separator line positioning */
+      }
+
+      .blocklyTreeRow:hover {
+         transform: scale(1.05);
+         background-color: #e2e8f0;
+         z-index: 10; /* Bring above separator */
+      }
+      
+      /* --- SEPARATOR LINE --- */
+      .blocklyTreeRow::after {
+        content: "" !important;
+        position: absolute !important;
+        bottom: -6px !important; /* Position in the gap */
+        left: 20% !important;
+        width: 60% !important; /* Not full width */
+        height: 1px !important;
+        background-color: #cbd5e1 !important; /* Slate-300 */
+        opacity: 0.6;
+      }
+
+      /* Hide separator on hover to keep it clean */
+      .blocklyTreeRow:hover::after {
+        opacity: 0;
+      }
+
+      /* Hide separator for the last item */
+      .blocklyToolboxContents > div:last-child .blocklyTreeRow::after {
+        display: none !important;
+      }
+      
+      /* Selected State Generic - Override hover bg */
+      .blocklyTreeRow.blocklyTreeSelected:hover {
+        transform: none; 
+      }
+
+      /* --- HIDE DEFAULT ICON --- */
+      .blocklyTreeIcon {
+        display: none !important;
+      }
+
+      /* --- LABEL STYLING --- */
+      .blocklyTreeLabel {
+        font-family: 'Rubik', sans-serif !important;
+        font-size: 13px !important; /* Increased font size */
+        font-weight: 500 !important;
+        text-align: center !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        
+        color: #64748b; /* Fallback color */
+      }
+
+      /* --- THE COLORED BUBBLE (Icon Container) --- */
+      .blocklyTreeLabel::before {
+        content: "" !important;
+        display: inline-block !important;
+        width: 52px !important; /* Increased size */
+        height: 52px !important; /* Increased size */
+        border-radius: 50% !important;
+        margin-bottom: 6px !important;
+        
+        background-repeat: no-repeat !important;
+        background-position: center !important;
+        background-size: 32px 32px !important; /* Increased icon size */
+        background-color: #ccc; /* Fallback */
+      }
+
+
+      /* =========================================
+         CATEGORY STYLES - HIERARCHY BASED
+         ========================================= */
+
+      /* 1. EVENTS */
+      /* Normal Text Color */
+      .blocklyToolboxContents > div:nth-child(1) .blocklyTreeLabel,
+      .blocklyTreeRow[aria-label*="Events"] .blocklyTreeLabel { 
+          color: #dcb000 !important; 
+      }
+      /* Icon */
+      .blocklyToolboxContents > div:nth-child(1) .blocklyTreeLabel::before,
+      .blocklyTreeRow[aria-label*="Events"] .blocklyTreeLabel::before {
+        background-color: #FFBF00 !important;
+        background-image: url("https://codejredu.github.io/test/assets/robot/flag.svg") !important;
+      }
+      /* SELECTED STATE */
+      .blocklyToolboxContents > div:nth-child(1) .blocklyTreeRow.blocklyTreeSelected,
+      .blocklyTreeRow[aria-label*="Events"].blocklyTreeSelected {
+         background-color: #FFBF00 !important;
+      }
+      .blocklyToolboxContents > div:nth-child(1) .blocklyTreeRow.blocklyTreeSelected .blocklyTreeLabel,
+      .blocklyTreeRow[aria-label*="Events"].blocklyTreeSelected .blocklyTreeLabel {
+         color: #ffffff !important;
+      }
+
+
+      /* 2. MOTION */
+      /* Normal Text Color */
+      .blocklyToolboxContents > div:nth-child(2) .blocklyTreeLabel,
+      .blocklyTreeRow[aria-label*="Motion"] .blocklyTreeLabel { 
+          color: #4C97FF !important; 
+      }
+      /* Icon */
+      .blocklyToolboxContents > div:nth-child(2) .blocklyTreeLabel::before,
+      .blocklyTreeRow[aria-label*="Motion"] .blocklyTreeLabel::before {
+        background-color: #4C97FF !important;
+        background-image: url("https://codejredu.github.io/test/assets/robot/gear.svg") !important;
+      }
+      /* SELECTED STATE */
+      .blocklyToolboxContents > div:nth-child(2) .blocklyTreeRow.blocklyTreeSelected,
+      .blocklyTreeRow[aria-label*="Motion"].blocklyTreeSelected {
+         background-color: #4C97FF !important;
+      }
+      .blocklyToolboxContents > div:nth-child(2) .blocklyTreeRow.blocklyTreeSelected .blocklyTreeLabel,
+      .blocklyTreeRow[aria-label*="Motion"].blocklyTreeSelected .blocklyTreeLabel {
+         color: #ffffff !important;
+      }
+
+
+      /* 3. CONTROL */
+      /* Normal Text Color */
+      .blocklyToolboxContents > div:nth-child(3) .blocklyTreeLabel,
+      .blocklyTreeRow[aria-label*="Control"] .blocklyTreeLabel { 
+          color: #e69915 !important; 
+      }
+      /* Icon */
+      .blocklyToolboxContents > div:nth-child(3) .blocklyTreeLabel::before,
+      .blocklyTreeRow[aria-label*="Control"] .blocklyTreeLabel::before {
+        background-color: #FFAB19 !important;
+        background-image: url("https://codejredu.github.io/test/assets/robot/control.svg") !important;
+      }
+      /* SELECTED STATE */
+      .blocklyToolboxContents > div:nth-child(3) .blocklyTreeRow.blocklyTreeSelected,
+      .blocklyTreeRow[aria-label*="Control"].blocklyTreeSelected {
+         background-color: #FFAB19 !important;
+      }
+      .blocklyToolboxContents > div:nth-child(3) .blocklyTreeRow.blocklyTreeSelected .blocklyTreeLabel,
+      .blocklyTreeRow[aria-label*="Control"].blocklyTreeSelected .blocklyTreeLabel {
+         color: #ffffff !important;
+      }
+
+
+      /* 4. SENSING */
+      /* Normal Text Color */
+      .blocklyToolboxContents > div:nth-child(4) .blocklyTreeLabel,
+      .blocklyTreeRow[aria-label*="Sensing"] .blocklyTreeLabel { 
+          color: #5CB1D6 !important; 
+      }
+      /* Icon */
+      .blocklyToolboxContents > div:nth-child(4) .blocklyTreeLabel::before,
+      .blocklyTreeRow[aria-label*="Sensing"] .blocklyTreeLabel::before {
+        background-color: #5CB1D6 !important;
+        background-image: url("https://codejredu.github.io/test/assets/robot/sensor.svg") !important;
+      }
+      /* SELECTED STATE */
+      .blocklyToolboxContents > div:nth-child(4) .blocklyTreeRow.blocklyTreeSelected,
+      .blocklyTreeRow[aria-label*="Sensing"].blocklyTreeSelected {
+         background-color: #5CB1D6 !important;
+      }
+      .blocklyToolboxContents > div:nth-child(4) .blocklyTreeRow.blocklyTreeSelected .blocklyTreeLabel,
+      .blocklyTreeRow[aria-label*="Sensing"].blocklyTreeSelected .blocklyTreeLabel {
+         color: #ffffff !important;
+      }
+
+
+      /* 5. OPERATORS */
+      /* Normal Text Color */
+      .blocklyToolboxContents > div:nth-child(5) .blocklyTreeLabel,
+      .blocklyTreeRow[aria-label*="Operators"] .blocklyTreeLabel { 
+          color: #59C059 !important; 
+      }
+      /* Icon */
+      .blocklyToolboxContents > div:nth-child(5) .blocklyTreeLabel::before,
+      .blocklyTreeRow[aria-label*="Operators"] .blocklyTreeLabel::before {
+        background-color: #59C059 !important;
+        background-image: url("https://codejredu.github.io/test/assets/robot/math.svg") !important;
+      }
+      /* SELECTED STATE */
+      .blocklyToolboxContents > div:nth-child(5) .blocklyTreeRow.blocklyTreeSelected,
+      .blocklyTreeRow[aria-label*="Operators"].blocklyTreeSelected {
+         background-color: #59C059 !important;
+      }
+      .blocklyToolboxContents > div:nth-child(5) .blocklyTreeRow.blocklyTreeSelected .blocklyTreeLabel,
+      .blocklyTreeRow[aria-label*="Operators"].blocklyTreeSelected .blocklyTreeLabel {
+         color: #ffffff !important;
+      }
+      
+      /* Main Workspace Background */
+      .blocklySvg {
+        background-color: #f9f9f9;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@18.2.0",
+    "react/jsx-runtime": "https://esm.sh/react@18.2.0/jsx-runtime",
+    "react-dom": "https://esm.sh/react-dom@18.2.0?deps=react@18.2.0",
+    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client?deps=react@18.2.0",
+    "lucide-react": "https://esm.sh/lucide-react@0.300.0?deps=react@18.2.0",
+    "blockly": "https://esm.sh/blockly@10.4.3",
+    "blockly/": "https://esm.sh/blockly@10.4.3/",
+    "three": "https://esm.sh/three@0.160.0",
+    "@react-three/fiber": "https://esm.sh/@react-three/fiber@8.15.14?deps=three@0.160.0,react@18.2.0",
+    "@react-three/drei": "https://esm.sh/@react-three/drei@9.96.1?deps=three@0.160.0,react@18.2.0,@react-three/fiber@8.15.14",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/"
+  }
+}
+</script>
+</head>
+  <body class="bg-gray-100 h-screen w-screen overflow-hidden text-gray-900">
+    <div id="root" class="h-full w-full"></div>
+  </body>
+</html>

@@ -1,0 +1,5 @@
+{
+  "name": "RoboCode",
+  "description": "A virtual robot programming environment inspired by Scratch, using Google Blockly.",
+  "requestFramePermissions": []
+}
