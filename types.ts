@@ -40,6 +40,11 @@ declare global {
       initialValue: string | number, 
       onConfirm: (newValue: number) => void
     ) => void;
+
+    // Function exposed by React to activate the 3D Color Picker
+    showBlocklyColorPicker: (
+      onPick: (newColor: string) => void
+    ) => void;
   }
 }
 

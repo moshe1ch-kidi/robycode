@@ -1,3 +1,4 @@
+
 // Initialize Blockly Setup
 
 // --- SCRATCH THEME DEFINITION ---
@@ -96,34 +97,46 @@ export const initBlockly = () => {
   const javascriptGenerator = javascript.javascriptGenerator;
 
   // --- CUSTOM NUMPAD FIELD ---
-  // Define a custom class that extends FieldNumber
   class FieldNumpad extends Blockly.FieldNumber {
     constructor(value?: any, min?: any, max?: any, precision?: any, validator?: any) {
         super(value, min, max, precision, validator);
     }
     
-    // Override the showEditor_ method to open our React Numpad
     showEditor_() {
-        // We use the global window function exposed by App.tsx
         if (window.showBlocklyNumpad) {
             window.showBlocklyNumpad(this.getValue(), (newValue) => {
                 this.setValue(newValue);
             });
         } else {
-            // Fallback to default if React isn't ready
             super.showEditor_(); 
         }
     }
   }
 
-  // Register or just use this class. 
-  // We'll use it directly in block definitions below.
+  // --- CUSTOM COLOR DROPPER FIELD ---
+  // Extends the standard Color field but opens our 3D picker
+  class FieldColorDropper extends Blockly.FieldColour {
+    constructor(value?: any, validator?: any) {
+        super(value, validator);
+    }
+
+    showEditor_() {
+        if (window.showBlocklyColorPicker) {
+            // Call the React function to enable the 3D tool
+            window.showBlocklyColorPicker((newColor: string) => {
+                this.setValue(newColor);
+            });
+        } else {
+            // Fallback to default palette if React isn't connected
+            super.showEditor_();
+        }
+    }
+  }
 
   // --- DEFINE BLOCKS ---
 
   // --- EVENTS (HATS) ---
   
-  // 1. Green Flag Start
   Blockly.Blocks['event_program_start'] = {
     init: function() {
       this.appendDummyInput()
@@ -141,7 +154,6 @@ export const initBlockly = () => {
     }
   };
 
-  // 2. When Touching Obstacle
   Blockly.Blocks['event_when_obstacle'] = {
       init: function() {
           this.appendDummyInput()
@@ -152,7 +164,6 @@ export const initBlockly = () => {
       }
   };
 
-  // 3. When Color Detected
   Blockly.Blocks['event_when_color'] = {
       init: function() {
           this.appendDummyInput()
@@ -171,14 +182,12 @@ export const initBlockly = () => {
 
   // --- MOTION ---
 
-  // 1. Move Forward/Backward
   Blockly.Blocks['robot_move'] = {
     init: function() {
       this.appendDummyInput()
           .appendField("Drive")
           .appendField(new Blockly.FieldDropdown([["Forward","FORWARD"], ["Backward","BACKWARD"]]), "DIRECTION")
           .appendField("distance")
-          // Use FieldNumpad instead of FieldNumber
           .appendField(new FieldNumpad(10), "DISTANCE")
           .appendField("cm");
       this.setPreviousStatement(true, null);
@@ -188,14 +197,60 @@ export const initBlockly = () => {
     }
   };
 
-  // 2. Turn
+  Blockly.Blocks['robot_move_speed'] = {
+    init: function() {
+      this.appendDummyInput()
+          .appendField("Drive")
+          .appendField(new Blockly.FieldDropdown([["Forward","FORWARD"], ["Backward","BACKWARD"]]), "DIRECTION")
+          .appendField("distance")
+          .appendField(new FieldNumpad(10), "DISTANCE")
+          .appendField("cm speed")
+          .appendField(new FieldNumpad(50, 0, 100), "SPEED")
+          .appendField("%");
+      this.setPreviousStatement(true, null);
+      this.setNextStatement(true, null);
+      this.setStyle('motion_blocks'); 
+      this.setTooltip("Move the robot forward or backward at a specific speed");
+    }
+  };
+
+  Blockly.Blocks['robot_move_until'] = {
+    init: function() {
+      this.appendDummyInput()
+          .appendField("Drive")
+          .appendField(new Blockly.FieldDropdown([["Forward","FORWARD"], ["Backward","BACKWARD"]]), "DIRECTION")
+          .appendField("until");
+      this.appendValueInput("CONDITION")
+          .setCheck("Boolean");
+      this.appendDummyInput()
+          .appendField("at speed")
+          .appendField(new FieldNumpad(50, 0, 100), "SPEED")
+          .appendField("%");
+      this.setInputsInline(true);
+      this.setPreviousStatement(true, null);
+      this.setNextStatement(true, null);
+      this.setStyle('motion_blocks'); 
+      this.setTooltip("Move until condition is met");
+    }
+  };
+  
+  Blockly.Blocks['robot_stop'] = {
+      init: function() {
+          this.appendDummyInput()
+              .appendField("Stop Moving");
+          this.setPreviousStatement(true, null);
+          this.setNextStatement(true, null);
+          this.setStyle('motion_blocks');
+          this.setTooltip("Stop the robot");
+      }
+  };
+
   Blockly.Blocks['robot_turn'] = {
     init: function() {
       this.appendDummyInput()
           .appendField("Turn")
           .appendField(new Blockly.FieldDropdown([["Right","RIGHT"], ["Left","LEFT"]]), "DIRECTION")
           .appendField("angle")
-          // Use FieldNumpad
           .appendField(new FieldNumpad(90), "ANGLE")
           .appendField("degrees");
       this.setPreviousStatement(true, null);
@@ -205,7 +260,6 @@ export const initBlockly = () => {
     }
   };
 
-  // 2.5 Set Speed
   Blockly.Blocks['robot_set_speed'] = {
       init: function() {
           this.appendDummyInput()
@@ -219,14 +273,13 @@ export const initBlockly = () => {
       }
   };
 
-  // 3. LED Control
   Blockly.Blocks['robot_led'] = {
     init: function() {
       this.appendDummyInput()
           .appendField("Set LED")
           .appendField(new Blockly.FieldDropdown([["Left","LEFT"], ["Right","RIGHT"], ["Both","BOTH"]]), "SIDE")
           .appendField("color")
-          .appendField(new Blockly.FieldColour("#ff0000"), "COLOR");
+          .appendField(new FieldColorDropper("#ff0000"), "COLOR"); // Using 3D Dropper
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
       this.setStyle('looks_blocks');
@@ -234,7 +287,6 @@ export const initBlockly = () => {
     }
   };
 
-  // 3.5 Turn Off LED
   Blockly.Blocks['robot_led_off'] = {
     init: function() {
       this.appendDummyInput()
@@ -247,12 +299,10 @@ export const initBlockly = () => {
     }
   };
   
-   // 4. Wait
    Blockly.Blocks['robot_wait'] = {
     init: function() {
       this.appendDummyInput()
           .appendField("Wait")
-          // Use FieldNumpad
           .appendField(new FieldNumpad(1), "SECONDS")
           .appendField("seconds");
       this.setPreviousStatement(true, null);
@@ -262,7 +312,6 @@ export const initBlockly = () => {
     }
   };
 
-  // Override Math Number to use Numpad
   Blockly.Blocks['math_number'] = {
       init: function() {
         this.setHelpUrl(Blockly.Msg.MATH_NUMBER_HELPURL);
@@ -277,7 +326,6 @@ export const initBlockly = () => {
 
   // --- SENSOR BLOCKS ---
 
-  // 5. Ultrasonic Sensor (Distance)
   Blockly.Blocks['sensor_ultrasonic'] = {
     init: function() {
       this.appendDummyInput()
@@ -288,7 +336,6 @@ export const initBlockly = () => {
     }
   };
 
-  // 6. Touch Sensor
   Blockly.Blocks['sensor_touch'] = {
     init: function() {
       this.appendDummyInput()
@@ -299,7 +346,6 @@ export const initBlockly = () => {
     }
   };
 
-  // 7. Gyro Sensor
   Blockly.Blocks['sensor_gyro'] = {
     init: function() {
       this.appendDummyInput()
@@ -310,7 +356,6 @@ export const initBlockly = () => {
     }
   };
 
-  // 8. Color Sensor
   Blockly.Blocks['sensor_color'] = {
     init: function() {
       this.appendDummyInput()
@@ -321,10 +366,33 @@ export const initBlockly = () => {
     }
   };
 
+  // --- UPDATED BLOCK WITH NEW FIELD ---
+  Blockly.Blocks['sensor_touching_color'] = {
+    init: function() {
+      this.appendDummyInput()
+          .appendField("touching color")
+          // Use FieldColorDropper instead of FieldColour
+          .appendField(new FieldColorDropper("#ffbf00"), "COLOR")
+          .appendField("?");
+      this.setOutput(true, "Boolean");
+      this.setStyle('sensors_blocks');
+      this.setTooltip("Checks if the robot is touching a specific color");
+    }
+  };
+
+  Blockly.Blocks['sensor_circumference'] = {
+    init: function() {
+      this.appendDummyInput()
+          .appendField("Wheel Circumference (cm)");
+      this.setOutput(true, "Number");
+      this.setStyle('sensors_blocks');
+      this.setTooltip("Returns the circumference of the robot wheel");
+    }
+  };
+
 
   // --- DEFINE GENERATORS ---
 
-  // Event Generators
   javascriptGenerator.forBlock['event_program_start'] = function(block: any) {
       return '// Program Start\n';
   };
@@ -338,19 +406,41 @@ export const initBlockly = () => {
       return `// Event: When Color ${color}\n`;
   };
 
-
   javascriptGenerator.forBlock['robot_move'] = function(block: any) {
     const direction = block.getFieldValue('DIRECTION');
     const distance = block.getFieldValue('DISTANCE');
-    // Ensure Forward corresponds to +Z (towards sensor) and Backward to -Z
     const distVal = direction === 'BACKWARD' ? -distance : distance;
     return `await robot.move(${distVal});\n`;
+  };
+
+  javascriptGenerator.forBlock['robot_move_speed'] = function(block: any) {
+    const direction = block.getFieldValue('DIRECTION');
+    const distance = block.getFieldValue('DISTANCE');
+    const speed = block.getFieldValue('SPEED');
+    const distVal = direction === 'BACKWARD' ? -distance : distance;
+    return `await robot.setSpeed(${speed});\nawait robot.move(${distVal});\n`;
+  };
+
+  javascriptGenerator.forBlock['robot_move_until'] = function(block: any) {
+    const direction = block.getFieldValue('DIRECTION');
+    const speed = block.getFieldValue('SPEED');
+    const condition = javascriptGenerator.valueToCode(block, 'CONDITION', javascriptGenerator.ORDER_NONE) || 'false';
+    const distStep = direction === 'BACKWARD' ? -0.2 : 0.2;
+    return `
+    await robot.setSpeed(${speed});
+    while (!(${condition})) {
+      await robot.move(${distStep});
+    }
+    `;
+  };
+  
+  javascriptGenerator.forBlock['robot_stop'] = function(block: any) {
+      return 'await robot.stop();\n';
   };
 
   javascriptGenerator.forBlock['robot_turn'] = function(block: any) {
     const direction = block.getFieldValue('DIRECTION');
     const angle = block.getFieldValue('ANGLE');
-    // Left turn = Positive Angle (CCW), Right turn = Negative Angle (CW)
     const angVal = direction === 'LEFT' ? angle : -angle;
     return `await robot.turn(${angVal});\n`;
   };
@@ -368,7 +458,6 @@ export const initBlockly = () => {
 
   javascriptGenerator.forBlock['robot_led_off'] = function(block: any) {
       const side = block.getFieldValue('SIDE');
-      // Setting color to black turns it off in Robot3D.tsx
       return `robot.setLed('${side.toLowerCase()}', 'black');\n`;
   };
   
@@ -377,14 +466,12 @@ export const initBlockly = () => {
     return `await robot.wait(${seconds * 1000});\n`;
   };
 
-  // Override standard Math Number generator just in case
   javascriptGenerator.forBlock['math_number'] = function(block: any) {
       const code = parseFloat(block.getFieldValue('NUM'));
       const order = code >= 0 ? javascriptGenerator.ORDER_ATOMIC : javascriptGenerator.ORDER_UNARY_NEGATION;
       return [code, order];
   }
 
-  // Sensor Generators
   javascriptGenerator.forBlock['sensor_ultrasonic'] = function(block: any) {
     return ['await robot.getDistance()', javascriptGenerator.ORDER_AWAIT || javascriptGenerator.ORDER_ATOMIC];
   };
@@ -400,16 +487,24 @@ export const initBlockly = () => {
   javascriptGenerator.forBlock['sensor_color'] = function(block: any) {
     return ['await robot.getColor()', javascriptGenerator.ORDER_AWAIT || javascriptGenerator.ORDER_ATOMIC];
   };
+
+  javascriptGenerator.forBlock['sensor_touching_color'] = function(block: any) {
+    const color = block.getFieldValue('COLOR'); // Returns Hex string e.g. '#ff0000'
+    return [`await robot.isTouchingColor('${color}')`, javascriptGenerator.ORDER_AWAIT || javascriptGenerator.ORDER_ATOMIC];
+  };
+
+  javascriptGenerator.forBlock['sensor_circumference'] = function(block: any) {
+    return ['await robot.getCircumference()', javascriptGenerator.ORDER_AWAIT || javascriptGenerator.ORDER_ATOMIC];
+  };
 };
 
-// Config structure with Scratch Styles
 export const toolbox = {
   kind: "categoryToolbox",
   contents: [
     {
       kind: "category",
       name: "Events",
-      categorystyle: "events_category", // Yellow
+      categorystyle: "events_category",
       cssConfig: { "container": "category-events" },
       contents: [
           { kind: "block", type: "event_program_start" },
@@ -420,10 +515,13 @@ export const toolbox = {
     {
       kind: "category",
       name: "Motion",
-      categorystyle: "motion_category", // Links to theme color
-      cssConfig: { "container": "category-motion" }, // Link to CSS class for Icon
+      categorystyle: "motion_category",
+      cssConfig: { "container": "category-motion" },
       contents: [
         { kind: "block", type: "robot_move" },
+        { kind: "block", type: "robot_move_speed" }, 
+        { kind: "block", type: "robot_move_until" },
+        { kind: "block", type: "robot_stop" },
         { kind: "block", type: "robot_turn" },
         { kind: "block", type: "robot_set_speed" },
       ]
@@ -431,8 +529,8 @@ export const toolbox = {
     {
       kind: "category",
       name: "Looks",
-      categorystyle: "looks_category", // Links to theme color
-      cssConfig: { "container": "category-looks" }, // Link to CSS class for Icon
+      categorystyle: "looks_category",
+      cssConfig: { "container": "category-looks" },
       contents: [
         { kind: "block", type: "robot_led" },
         { kind: "block", type: "robot_led_off" },
@@ -448,16 +546,17 @@ export const toolbox = {
         { kind: "block", type: "sensor_touch" },
         { kind: "block", type: "sensor_gyro" },
         { kind: "block", type: "sensor_color" },
+        { kind: "block", type: "sensor_touching_color" },
+        { kind: "block", type: "sensor_circumference" },
       ]
     },
     {
       kind: "category",
       name: "Control",
-      categorystyle: "control_category", // Links to theme color
-      cssConfig: { "container": "category-control" }, // Link to CSS class for Icon
+      categorystyle: "control_category",
+      cssConfig: { "container": "category-control" },
       contents: [
         { kind: "block", type: "robot_wait" },
-        // Repeat Ext uses math_number shadow, which we overrode
         { kind: "block", type: "controls_repeat_ext", inputs: { TIMES: { shadow: { type: "math_number", fields: { NUM: 5 } } } } },
         { kind: "block", type: "controls_if" },
       ]
@@ -465,13 +564,28 @@ export const toolbox = {
     {
         kind: "category",
         name: "Logic",
-        categorystyle: "logic_category", // Links to theme color
-        cssConfig: { "container": "category-logic" }, // Link to CSS class for Icon
+        categorystyle: "logic_category",
+        cssConfig: { "container": "category-logic" },
         contents: [
-            { kind: "block", type: "logic_compare" },
+            { 
+              kind: "block", 
+              type: "logic_compare",
+              inputs: {
+                A: { shadow: { type: "math_number", fields: { NUM: 10 } } },
+                B: { shadow: { type: "math_number", fields: { NUM: 10 } } }
+              }
+            },
             { kind: "block", type: "logic_operation" },
             { kind: "block", type: "logic_boolean" },
-            { kind: "block", type: "math_number" }, // Useful for comparisons
+            { 
+              kind: "block", 
+              type: "math_arithmetic",
+              inputs: {
+                A: { shadow: { type: "math_number", fields: { NUM: 1 } } },
+                B: { shadow: { type: "math_number", fields: { NUM: 1 } } }
+              }
+            },
+            { kind: "block", type: "math_number" },
         ]
     }
   ]

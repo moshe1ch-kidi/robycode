@@ -248,7 +248,9 @@ const Robot3D: React.FC<Robot3DProps> = ({ state }) => {
       groupRef.current.position.lerp(new Vector3(state.x, 0.6, state.z), 0.1);
       
       // Rotation interpolation
-      const targetRotation = -state.rotation * (Math.PI / 180); // Negative for standard math usage
+      // FIXED: Removed negation. Positive rotation (CCW) in state matches ThreeJS rotation.y
+      // This ensures the robot's "Nose" (Touch sensor at +Z) matches the movement direction calculation.
+      const targetRotation = state.rotation * (Math.PI / 180); 
       const currentRotation = groupRef.current.rotation.y;
       
       // Simple easing
@@ -361,6 +363,7 @@ const Robot3D: React.FC<Robot3DProps> = ({ state }) => {
       </group>
 
       {/* 7. Touch Sensor (Front Bumper) - Updated to EV3 Style */}
+      {/* This is the NOSE of the robot, placed at +Z */}
       <EV3TouchSensor position={[0, 0, 1.3]} />
 
       {/* 8. Gyro Sensor (Above Right Wheel) */}

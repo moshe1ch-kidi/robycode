@@ -13,10 +13,9 @@ const Numpad: React.FC<NumpadProps> = ({ isOpen, initialValue, onClose, onConfir
 
   useEffect(() => {
     if (isOpen) {
-      // Reset to 0 on open as requested
-      setDisplay('0');
+      setDisplay(String(initialValue));
     }
-  }, [isOpen]); // Removed initialValue from dependency to avoid resetting if prop changes (though it shouldn't while open)
+  }, [isOpen, initialValue]);
 
   if (!isOpen) return null;
 
